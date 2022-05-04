@@ -1,10 +1,5 @@
-import { useState } from 'react';
+import Widget from "./components/Wigdet";
 
-
-function App() {
-  return(
-    <h1>Hello world</h1>
-  )
+export function App(){
+  return <Widget/>
 }
-
-export default App
