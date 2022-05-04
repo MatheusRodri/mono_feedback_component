@@ -1,4 +1,4 @@
-import Widget from "./components/Wigdet";
+import {Widget} from "./components/Wigdet";
 
 export function App(){
   return <Widget/>
