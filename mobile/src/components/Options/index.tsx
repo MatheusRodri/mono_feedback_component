@@ -1,29 +1,30 @@
-import React from 'react';
-import { View,Text } from 'react-native';
+import { Text, View } from 'react-native';
+import { FeedbackTypes, feedbackTypes } from '../../utils/feedbackTypes';
 import { Copyright } from '../Copyright';
-
-import {feedbackTypes} from "../../utils/feedbackTypes";
-import { styles } from './styles';
 import { Option } from '../Option';
-export function Options() {
-    return (
-        <View style={styles.container}>
+import { styles } from './styles';
 
-            <Text style={styles.title}>
-                Deixe seu feedback 
-            </Text>
+interface OptionsProps {
+  onFeedbackTypeChanged: (type: FeedbackTypes) => void;
+}
 
+export function Options({ onFeedbackTypeChanged }: OptionsProps) {
+  return (
+    <View style={styles.container}>
+      <Text style={styles.title}>Leave your feedback</Text>
 
-            <View style={styles.options}>
-                {
-                    Object
-                        .entries(feedbackTypes)
-                        .map(([key, value]) => (
-                            <Option key={key} title={value.title} image={value.image} />
-                        ))  
-                }
-            </View>
-            <Copyright />
-        </View>
-    );
+      <View style={styles.options}>
+        {Object.entries(feedbackTypes).map(([key, val]) => (
+          <Option
+            key={key}
+            title={val.title}
+            image={val.image}
+            onPress={() => onFeedbackTypeChanged(key as FeedbackTypes)}
+          />
+        ))}
+      </View>
+
+      <Copyright />
+    </View>
+  );
 }

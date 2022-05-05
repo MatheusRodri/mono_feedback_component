@@ -1,76 +1,106 @@
-import React,{useState} from 'react';
-import { View, TextInput, Image, Text, TouchableOpacity } from 'react-native';
 import { ArrowLeft } from 'phosphor-react-native';
-import {FeedbackType} from "../../components/Widget";
-import { styles } from './styles';
+import { useState } from 'react';
+import { View, TextInput, Text, Image, TouchableOpacity } from 'react-native';
+import { captureScreen } from 'react-native-view-shot';
+import { api } from '../../libs/api';
 import { theme } from '../../theme';
-import {feedbackTypes} from "../../utils/feedbackTypes";
-import {ScreenshotButton} from "../../components/SreenshotButton";
-import {Button} from "../../components/Button";
-import {captureScreen} from 'react-native-view-shot';
+import { feedbackTypes, FeedbackTypes } from '../../utils/feedbackTypes';
+import { Button } from '../Button';
+import { ScreenshotButton } from '../ScreenshotButton';
+import { styles } from './styles';
+7;
+import * as FileSystem from 'expo-file-system';
 
-interface Props{
-    feedbackType: FeedbackType;
+interface FormProps {
+  feedbackType: FeedbackTypes;
+  onFeedbackCancel: () => void;
+  onFeedbackSent: () => void;
 }
 
+export function Form({
+  feedbackType,
+  onFeedbackCancel,
+  onFeedbackSent
+}: FormProps) {
+  const [screenshot, setScreenshot] = useState<string | null>(null);
+  const [isSendingFeedback, setIsSendingFeedback] = useState(false);
+  const [comment, setComment] = useState('');
+  const { title, image } = feedbackTypes[feedbackType];
 
-export function Form({feedbackType}: Props) {
+  function handleScreenshot() {
+    captureScreen({
+      format: 'jpg',
+      quality: 0.8
+    })
+      .then((uri) => setScreenshot(uri))
+      .catch((err) => console.log(err));
+  }
 
-    const feedbackTypeInfo = feedbackTypes[feedbackType];
+  function handleScreenshotRemove() {
+    setScreenshot(null);
+  }
 
-    const [screenshot, setScreenshot] = useState<string | null>(null);
+  async function handleFeedbackSend() {
+    if (isSendingFeedback) return;
 
+    setIsSendingFeedback(true);
+    const base64Screenshot =
+      screenshot &&
+      (await FileSystem.readAsStringAsync(screenshot, {
+        encoding: 'base64'
+      }));
 
-    function handleScreenshot() {
-        captureScreen({
-            format: 'jpg',
-            quality: 0.8,
-        })
-            .then(uri => setScreenshot(uri))
-            .catch(err => console.error(err));
+    try {
+      await api.post('/feedbacks', {
+        type: feedbackType,
+        comment,
+        screenshot: screenshot
+          ? `data:image/png;base64, ${base64Screenshot}`
+          : null
+      });
+
+      onFeedbackSent();
+    } catch (error) {
+      console.log(error);
+      setIsSendingFeedback(false);
     }
+  }
 
-    function handleScreenshotRemove(){
-        setScreenshot(null);
-    }
+  return (
+    <View style={styles.container}>
+      <View style={styles.header}>
+        <TouchableOpacity onPress={onFeedbackCancel}>
+          <ArrowLeft
+            size={24}
+            weight="bold"
+            color={theme.colors.text_secondary}
+          />
+        </TouchableOpacity>
 
+        <View style={styles.titleContainer}>
+          <Image source={image} style={styles.image} />
 
-    return (
-        <View style={styles.container}>
-            <View style={styles.header}>
-                <TouchableOpacity>
-                    <ArrowLeft size={24} weight="bold" color={theme.colors.text_secondary} />
-                </TouchableOpacity>
+          <Text style={styles.titleText}>{title}</Text>
+        </View>
+      </View>
 
-                <View style={styles.titleContainer}>
-                    <Image
-                        source={feedbackTypeInfo.image}
-                        style={styles.image}
-                    />
-                    <Text style={styles.titleText}>
-                        {feedbackTypeInfo.title}
-                    </Text>
-                </View>
-            </View>
+      <TextInput
+        multiline
+        style={styles.input}
+        placeholder="Tell us what's happening..."
+        placeholderTextColor={theme.colors.text_secondary}
+        onChangeText={setComment}
+      />
 
-        <TextInput 
-            multiline
-            style={styles.input}
-            placeholder="O que está acontecendo?"
-            placeholderTextColor={theme.colors.text_secondary}
+      <View style={styles.footer}>
+        <ScreenshotButton
+          onTakeScreenshot={handleScreenshot}
+          onRemoveScreenshot={handleScreenshotRemove}
+          screenshot={screenshot}
         />
 
-        <View style={styles.footer}>
-            <ScreenshotButton 
-                onTakeShot={handleScreenshot}
-                onRemoveShot={handleScreenshotRemove}	
-                screenshot={screenshot}
-            />
-            <Button
-                isloading={false}
-            />
-        </View>
-
-        </View>
-    );
+        <Button isLoading={isSendingFeedback} onPress={handleFeedbackSend} />
+      </View>
+    </View>
+  );
 }

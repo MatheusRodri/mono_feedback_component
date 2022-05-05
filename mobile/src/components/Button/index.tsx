@@ -1,30 +1,24 @@
-import React from 'react';
-import { Text,TouchableOpacity,TouchableOpacityProps,ActivityIndicator } from 'react-native';
+import {
+  TouchableOpacity,
+  TouchableOpacityProps,
+  Text,
+  ActivityIndicator
+} from 'react-native';
 import { theme } from '../../theme';
-
 import { styles } from './styles';
 
-
-
-
-interface Props extends TouchableOpacityProps{
-    isloading : boolean;
+interface ButtonProps extends TouchableOpacityProps {
+  isLoading?: boolean;
 }
 
-
-export function Button({isloading,...rest}:Props) {
+export function Button({ isLoading, ...rest }: ButtonProps) {
   return (
-    <TouchableOpacity style={styles.container} {...rest}> 
-        {
-            isloading
-            ?
-            <ActivityIndicator size="small" color={theme.colors.text_on_brand_color} />
-            :
-            <Text style={styles.title}>
-                Enviar Feedback
-            </Text>
-        
-        }
+    <TouchableOpacity style={styles.container} {...rest}>
+      {isLoading ? (
+        <ActivityIndicator color={theme.colors.text_on_brand_color} />
+      ) : (
+        <Text style={styles.text}>Submit Feedback</Text>
+      )}
     </TouchableOpacity>
   );
 }
